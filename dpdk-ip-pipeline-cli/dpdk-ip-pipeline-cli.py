@@ -1,12 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
 import json
-import redis
 import socket
-import argparse
 import telnetlib
 import traceback
+
+import argparse
+import redis
 
 CONFIG = dict()
 CONFIG['debug'] = False
@@ -52,35 +53,35 @@ def main():
     for direction in ('uplink', 'downlink', ):
         try:
             tn[direction] = telnetlib.Telnet(CONFIG['telnet_host_{}'.format(direction)], CONFIG['telnet_port_{}'.format(direction)])
-        except socket.error, e:
-            print traceback.print_exc()
+        except socket.error as e:
+            traceback.print_exc()
 
     keep_running = True
     while keep_running:
         try:
             for item in redis_sub.listen():
                 d = json.loads(str(item.get('data', {})))
-                print d
+                print(d)
                 # do something with the dictionary d, e.g., talk to the telnet server reachable via tn
                 # example:
-                # {u'username': u'52:54:00:8e:1d:2c', 
-                #  u'calling_station_id': u'52:54:00:8e:1d:2c', 
-                #  u'called_station_id': u'acbridge', 
-                #  u'ip_addr': u'172.18.10.12', 
-                #  u'name': u'ipoe', 
-                #  u'session_id': u'e2a53300dd5b30b2', 
-                #  u'ctrl_type': u'ipoe', 
-                #  u'channel_name': u'52:54:00:8e:1d:2c', 
+                # {u'username': u'52:54:00:8e:1d:2c',
+                #  u'calling_station_id': u'52:54:00:8e:1d:2c',
+                #  u'called_station_id': u'acbridge',
+                #  u'ip_addr': u'172.18.10.12',
+                #  u'name': u'ipoe',
+                #  u'session_id': u'e2a53300dd5b30b2',
+                #  u'ctrl_type': u'ipoe',
+                #  u'channel_name': u'52:54:00:8e:1d:2c',
                 #  u'event': u'session-acct-start'}
 
-        except KeyboardInterrupt, e:
+        except KeyboardInterrupt as e:
             print("done.")
             keep_running = False
         except:
             if CONFIG['debug']:
-                print traceback.print_exc()
+                traceback.print_exc()
             raise
 
- 
+
 if __name__ == "__main__":
     main()
