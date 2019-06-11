@@ -1,5 +1,18 @@
 #! /bin/bash
 
+INTERFACE=enp0s25
+
+VXLAN_IFNAME=vxbng
+VXLAN_ID=100
+VXLAN_LOCAL=172.16.250.197
+VXLAN_REMOTE=172.16.248.35
+VXLAN_DSTPORT=4789
+
+S_VLAN_ID=100
+S_VLAN_IFNAME=$VXLAN_IFNAME.$S_VLAN_ID
+
+NETNS_PREFIX=$VXLAN_IFNAME
+
 start_pppoe_connection () {
     local namespace=$1
     local ifname=$2
@@ -95,19 +108,6 @@ kill_sessions () {
     pkill -KILL /usr/sbin/pppoe > /dev/null 2>&1
     pkill -KILL pppd > /dev/null 2>&1
 }
-
-INTERFACE=enp0s25
-
-VXLAN_IFNAME=vxbng
-VXLAN_ID=100
-VXLAN_LOCAL=172.16.250.197
-VXLAN_REMOTE=172.16.248.35
-VXLAN_DSTPORT=4789
-
-S_VLAN_ID=100
-S_VLAN_IFNAME=$VXLAN_IFNAME.$S_VLAN_ID
-
-NETNS_PREFIX=$VXLAN_IFNAME
 
 start_sessions () {
     create_vxlan_interface $VXLAN_IFNAME \
