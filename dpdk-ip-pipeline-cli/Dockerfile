@@ -1,5 +1,5 @@
-FROM python:2
+FROM python:3
 COPY . /app
 WORKDIR /app
-RUN pip install -r requirements.txt
-ENTRYPOINT [ "python", "dpdk-ip-pipeline-cli.py" ]
+RUN pip3 install -r requirements.txt
+ENTRYPOINT [ "python3", "dpdk-ip-pipeline-cli.py" ]
