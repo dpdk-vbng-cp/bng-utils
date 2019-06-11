@@ -63,14 +63,14 @@ def main():
                 print d
                 # do something with the dictionary d, e.g., talk to the telnet server reachable via tn
                 # example:
-                # {u'username': u'52:54:00:8e:1d:2c', 
-                #  u'calling_station_id': u'52:54:00:8e:1d:2c', 
-                #  u'called_station_id': u'acbridge', 
-                #  u'ip_addr': u'172.18.10.12', 
-                #  u'name': u'ipoe', 
-                #  u'session_id': u'e2a53300dd5b30b2', 
-                #  u'ctrl_type': u'ipoe', 
-                #  u'channel_name': u'52:54:00:8e:1d:2c', 
+                # {u'username': u'52:54:00:8e:1d:2c',
+                #  u'calling_station_id': u'52:54:00:8e:1d:2c',
+                #  u'called_station_id': u'acbridge',
+                #  u'ip_addr': u'172.18.10.12',
+                #  u'name': u'ipoe',
+                #  u'session_id': u'e2a53300dd5b30b2',
+                #  u'ctrl_type': u'ipoe',
+                #  u'channel_name': u'52:54:00:8e:1d:2c',
                 #  u'event': u'session-acct-start'}
 
         except KeyboardInterrupt, e:
@@ -81,6 +81,6 @@ def main():
                 print traceback.print_exc()
             raise
 
- 
+
 if __name__ == "__main__":
     main()
