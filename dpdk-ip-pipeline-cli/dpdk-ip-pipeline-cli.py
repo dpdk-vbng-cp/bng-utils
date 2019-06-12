@@ -60,8 +60,17 @@ def main():
     while keep_running:
         try:
             for item in redis_sub.listen():
-                d = json.loads(str(item.get('data', {})))
-                print(d)
+
+                s = item.get('data', {})
+                if isinstance(s, bytes):
+                    s = s.decode('utf8').replace("'", '"')
+                    try:
+                        d = json.loads(s)
+                        print(d)
+                    except ValueError as e:
+                        if CONFIG['debug']:
+                            traceback.print_exc()
+
                 # do something with the dictionary d, e.g., talk to the telnet server reachable via tn
                 # example:
                 # {u'username': u'52:54:00:8e:1d:2c',
