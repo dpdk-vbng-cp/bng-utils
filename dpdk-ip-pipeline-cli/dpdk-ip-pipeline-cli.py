@@ -19,6 +19,27 @@ CONFIG['telnet_port_uplink'] = 8086
 CONFIG['telnet_host_downlink'] = '127.0.0.1'
 CONFIG['telnet_port_downlink'] = 8087
 
+def handle_message(d):
+    print(d['event'])
+    if d['event'] == 'session-starting':
+        print('Event: session-starting')
+    elif d['event'] == 'session-acct-start':
+        print('Event: session-acct-start')
+        command = f'pipeline upstream|routing table 0 rule add match lpm ipv4 {d["ip_addr"]} 32 action fwd port 0 encap ether {d["calling_station_id"]} {d["called_station_id"]}'
+        send_telnet_command('uplink', command)
+
+
+def send_telnet_command(direction, command):
+    command = command + "\n"
+    command = command.encode('ascii')
+    prompt = b">"
+    print(f'Sending to {direction} the command {command}')
+    tn = telnetlib.Telnet()
+    tn.open(CONFIG['telnet_host_{}'.format(direction)], CONFIG['telnet_port_{}'.format(direction)])
+    print(tn.read_until(prompt))
+    tn.write(command)
+    print(tn.read_until(prompt))
+
 
 def main():
     """ """
@@ -66,7 +87,7 @@ def main():
                     s = s.decode('utf8').replace("'", '"')
                     try:
                         d = json.loads(s)
-                        print(d)
+                        handle_message(d)
                     except ValueError as e:
                         if CONFIG['debug']:
                             traceback.print_exc()
