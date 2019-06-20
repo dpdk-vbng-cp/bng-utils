@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+ #!/usr/bin/env python3
 
 import sys
 import json
@@ -18,6 +18,74 @@ CONFIG['telnet_host_uplink'] = '127.0.0.1'
 CONFIG['telnet_port_uplink'] = 8086
 CONFIG['telnet_host_downlink'] = '127.0.0.1'
 CONFIG['telnet_port_downlink'] = 8087
+gateway_address="00:e0:ed:5c:96:fe"
+
+def handle_message(d):
+    # calling_station_id is ppp client
+    # called_station_id is the pipeline/accel-ppp
+    print(d['event'])
+    if d['event'] == 'session-starting':
+        print('Event: session-starting')
+    elif d['event'] == 'session-acct-start':
+        print('Event: session-acct-start')
+        send_uplink_message(d)
+        send_downlink_message(d)
+
+def send_uplink_message(d):
+    print("############################################ UPSTREAM ####################################################################")
+    direction = 'uplink'
+    ctrl_ifname = d['ctrl_ifname']
+    tags = ctrl_ifname.split(".")
+    if len(tags) != 3:
+        print("Error: the interface name is not as expected. es: eth1.0.37")
+        return
+    s_tag, c_tag = tags[1], tags[2]
+    command = f'pipeline upstream|firewall table 0 rule add match acl priority 0 ipv4 {d["ip_addr"]} 32 0.0.0.0 0 0 65535 0 65535 17 action fwd port 0'
+    send_telnet_command(direction, command)
+    command = f'pipeline upstream|firewall table 0 rule add match acl priority 0 ipv4 {d["ip_addr"]} 32 0.0.0.0 0 0 65535 0 65535 6 action fwd port 0'
+    send_telnet_command(direction, command)
+    command = f'pipeline upstream|flow_clac table 0 rule add match hash qinq {s_tag} {c_tag} action fwd port 0 meter tc0 meter 0 policer g g y y r r'
+    send_telnet_command(direction, command)
+    command = f'pipeline upstream|dscp table 0 rule add match acl priority 0 ipv4 {d["ip_addr"]} 32 0.0.0.0 0 0 65535 0 65535 17 action fwd port 0 dscp 46'
+    send_telnet_command(direction, command)
+    command = f'pipeline upstream|dscp table 0 rule add match acl priority 0 ipv4 {d["ip_addr"]} 32 0.0.0.0 0 0 65535 0 65535 6 action fwd port 0 dscp 46'
+    send_telnet_command(direction, command)
+    command = f'pipeline upstream|routing table 0 rule add match acl priority 0 ipv4 {d["ip_addr"]} 32 0.0.0.0 0 0 65535 0 65535 17 action fwd port 0 encap ether {gateway_address} {d["called_station_id"]}'
+    send_telnet_command(direction, command)
+    command = f'pipeline upstream|routing table 0 rule add match acl priority 0 ipv4 {d["ip_addr"]} 32 0.0.0.0 0 0 65535 0 65535 6 action fwd port 0 encap ether {gateway_address} {d["called_station_id"]}'
+    send_telnet_command(direction, command)
+
+def send_downlink_message(d):
+    print("############################################ DOWNSTREAM ####################################################################")
+    direction = 'downlink'
+    ctrl_ifname = d['ctrl_ifname']
+    tags = ctrl_ifname.split(".")
+    if len(tags) != 3:
+        print("Error: the interface name is not as expected. es: eth1.0.37")
+        return
+    s_tag, c_tag = tags[1], tags[2]
+    command = f'pipeline downstream|firewall table 0 rule add match acl priority 0 ipv4 0.0.0.0 0 {d["ip_addr"]} 32 0 65535 0 65535 17 action fwd port 0'
+    send_telnet_command(direction, command)
+    command = f'pipeline downstream|firewall table 0 rule add match acl priority 0 ipv4 0.0.0.0 0 {d["ip_addr"]} 32 0 65535 0 65535 6 action fwd port 0'
+    send_telnet_command(direction, command)
+    last = d["ip_addr"].split(".")[3]
+    command = f'pipeline downstream|hqos table 0 rule add match lpm ipv4 {d["ip_addr"]} 32 action fwd port 0 tm subport 0 pipe {last}'
+    send_telnet_command(direction, command)
+    command = f'pipeline downstream|routing table 0 rule add match acl priority 0 ipv4 0.0.0.0 0 {d["ip_addr"]} 32 0 65535 0 65535 17 action fwd port 0 encap qinq_pppoe {d["calling_station_id"]} {d["called_station_id"]} 7 0 {s_tag} 7 0 {c_tag} {d["pppoe_sessionid"]}'
+    #command = f'pipeline downstream|routing table 0 rule add match acl priority 0 ipv4 0.0.0.0 0 {d["ip_addr"]} 32 0 65535 0 65535 17 action fwd port 0 encap ether {d["calling_station_id"]} {d["called_station_id"]}'
+    send_telnet_command(direction, command)
+    print(d)
+
+def send_telnet_command(direction, command):
+    command = command + "\n"
+    command = command.encode('ascii')
+    prompt = b">"
+    print(f'Sending to {direction} the command {command}')
+    tn = telnetlib.Telnet()
+    tn.open(CONFIG['telnet_host_{}'.format(direction)], CONFIG['telnet_port_{}'.format(direction)])
+    print(tn.read_until(prompt))
+    tn.write(command)
+    print(tn.read_until(prompt))
 
 
 def main():
@@ -66,7 +134,7 @@ def main():
                     s = s.decode('utf8').replace("'", '"')
                     try:
                         d = json.loads(s)
-                        print(d)
+                        handle_message(d)
                     except ValueError as e:
                         if CONFIG['debug']:
                             traceback.print_exc()
