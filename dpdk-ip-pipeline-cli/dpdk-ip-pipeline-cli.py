@@ -25,15 +25,32 @@ def handle_message(d):
         print('Event: session-starting')
     elif d['event'] == 'session-acct-start':
         print('Event: session-acct-start')
-        command = f'pipeline upstream|firewall table 0 rule add match acl priority 0 ipv4 0.0.0.0 0 {d["ip_addr"]} 32 0 65535 0 65535 17 action fwd port 1'
-        send_telnet_command('uplink', command)
-        command = f'pipeline upstream|dscp table 0 rule add match hash ipv4_5tuple {d["ip_addr"]} 0.0.0.0 110 210 17 action fwd port 0 dscp 46'
-        send_telnet_command('uplink', command)
-        command = f'pipeline upstream|nat table 0 rule add match hash ipv4_5tuple {d["ip_addr"]} 0.0.0.0 110 0 17 action fwd port 0 nat ipv4 0.0.0.0 14095'
-        send_telnet_command('uplink', command)
-        command = f'pipeline upstream|routing table 0 rule add match lpm ipv4 {d["ip_addr"]} 32 action fwd port 0 encap ether {d["calling_station_id"]} {d["called_station_id"]}'
-        send_telnet_command('uplink', command)
+        send_uplink_message(d)
+        send_downlink_message(d)
 
+def send_ulink_message(d):
+    print("############################################ UPSTREAM ####################################################################")
+    direction = 'uplink'
+    command = f'pipeline upstream|firewall table 0 rule add match acl priority 0 ipv4 0.0.0.0 0 {d["ip_addr"]} 32 0 65535 0 65535 17 action fwd port 1'
+    send_telnet_command(direction, command)
+    command = f'pipeline upstream|dscp table 0 rule add match hash ipv4_5tuple {d["ip_addr"]} 0.0.0.0 110 210 17 action fwd port 0 dscp 46'
+    send_telnet_command(direction, command)
+    command = f'pipeline upstream|nat table 0 rule add match hash ipv4_5tuple {d["ip_addr"]} 0.0.0.0 110 0 17 action fwd port 0 nat ipv4 0.0.0.0 14095'
+    send_telnet_command(direction, command)
+    command = f'pipeline upstream|routing table 0 rule add match lpm ipv4 {d["ip_addr"]} 32 action fwd port 0 encap ether {d["calling_station_id"]} {d["called_station_id"]}'
+    send_telnet_command(direction, command)
+
+def send_downlink_message(d):
+    print("############################################ DOWNSTREAM ####################################################################")
+    direction = 'down'
+    command = f'pipeline downstream|firewall table 0 rule add match acl priority 0 ipv4 {d["ip_addr"]} 0.0.0.0 24 0 65535 10010 10010 17 action fwd port 0'
+    send_telnet_command(direction, command)
+    command = f'pipeline downstream|nat table 0 rule add match hash ipv4_5tuple 0.0.0.0 0.0.0.0 0 10000 17 action fwd port 0 nat ipv4 {d["ip_addr"]} 110'
+    send_telnet_command(direction, command)
+    command = f'pipeline downstream|hqos table 0 rule add match lpm ipv4 {d["ip_addr"]} 32 action fwd port 0 tm subport 0 pipe 0'
+    send_telnet_command(direction, command)
+    command = f'pipeline downstream|routing table 0 rule add match lpm ipv4 110.0.0.0 32 action fwd port 0 encap qinq {d["calling_station_id"]} {d["called_station_id"]} 7 0 0 7 0 0'
+    send_telnet_command(direction, command)
 
 def send_telnet_command(direction, command):
     command = command + "\n"
