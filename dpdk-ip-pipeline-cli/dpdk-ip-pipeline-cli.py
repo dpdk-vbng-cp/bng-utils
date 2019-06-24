@@ -42,7 +42,7 @@ def send_ulink_message(d):
 
 def send_downlink_message(d):
     print("############################################ DOWNSTREAM ####################################################################")
-    direction = 'down'
+    direction = 'downlink'
     command = f'pipeline downstream|firewall table 0 rule add match acl priority 0 ipv4 {d["ip_addr"]} 0.0.0.0 24 0 65535 10010 10010 17 action fwd port 0'
     send_telnet_command(direction, command)
     command = f'pipeline downstream|nat table 0 rule add match hash ipv4_5tuple 0.0.0.0 0.0.0.0 0 10000 17 action fwd port 0 nat ipv4 {d["ip_addr"]} 110'
