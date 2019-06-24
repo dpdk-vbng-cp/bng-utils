@@ -28,7 +28,7 @@ def handle_message(d):
         send_uplink_message(d)
         send_downlink_message(d)
 
-def send_ulink_message(d):
+def send_uplink_message(d):
     print("############################################ UPSTREAM ####################################################################")
     direction = 'uplink'
     command = f'pipeline upstream|firewall table 0 rule add match acl priority 0 ipv4 0.0.0.0 0 {d["ip_addr"]} 32 0 65535 0 65535 17 action fwd port 1'
