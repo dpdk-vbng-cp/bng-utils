@@ -1,4 +1,4 @@
- #!/usr/bin/env python3
+#!/usr/bin/env python3
 
 import sys
 import json
@@ -37,7 +37,7 @@ def send_uplink_message(d):
     ctrl_ifname = d['ctrl_ifname']
     tags = ctrl_ifname.split(".")
     if len(tags) != 3:
-        print("Error: the interface name is not as expected. es: eth1.0.37")
+        print("Error: the interface name is not as expected. e.g. eth1.0.37")
         return
     s_tag, c_tag = tags[1], tags[2]
     command = f'pipeline upstream|firewall table 0 rule add match acl priority 0 ipv4 {d["ip_addr"]} 32 0.0.0.0 0 0 65535 0 65535 17 action fwd port 0'
@@ -61,7 +61,7 @@ def send_downlink_message(d):
     ctrl_ifname = d['ctrl_ifname']
     tags = ctrl_ifname.split(".")
     if len(tags) != 3:
-        print("Error: the interface name is not as expected. es: eth1.0.37")
+        print("Error: the interface name is not as expected. e.g. eth1.0.37")
         return
     s_tag, c_tag = tags[1], tags[2]
     command = f'pipeline downstream|firewall table 0 rule add match acl priority 0 ipv4 0.0.0.0 0 {d["ip_addr"]} 32 0 65535 0 65535 17 action fwd port 0'
@@ -72,9 +72,7 @@ def send_downlink_message(d):
     command = f'pipeline downstream|hqos table 0 rule add match lpm ipv4 {d["ip_addr"]} 32 action fwd port 0 tm subport 0 pipe {last}'
     send_telnet_command(direction, command)
     command = f'pipeline downstream|routing table 0 rule add match acl priority 0 ipv4 0.0.0.0 0 {d["ip_addr"]} 32 0 65535 0 65535 17 action fwd port 0 encap qinq_pppoe {d["calling_station_id"]} {d["called_station_id"]} 7 0 {s_tag} 7 0 {c_tag} {d["pppoe_sessionid"]}'
-    #command = f'pipeline downstream|routing table 0 rule add match acl priority 0 ipv4 0.0.0.0 0 {d["ip_addr"]} 32 0 65535 0 65535 17 action fwd port 0 encap ether {d["calling_station_id"]} {d["called_station_id"]}'
     send_telnet_command(direction, command)
-    print(d)
 
 def send_telnet_command(direction, command):
     command = command + "\n"
