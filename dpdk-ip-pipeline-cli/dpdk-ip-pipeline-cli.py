@@ -18,8 +18,7 @@ CONFIG['telnet_host_uplink'] = '127.0.0.1'
 CONFIG['telnet_port_uplink'] = 8086
 CONFIG['telnet_host_downlink'] = '127.0.0.1'
 CONFIG['telnet_port_downlink'] = 8087
-gateway_address="00:e0:ed:5c:96:fe"
-
+gateway_address="aa:bb:cc:dd:ee:ff"
 def handle_message(d):
     # calling_station_id is ppp client
     # called_station_id is the pipeline/accel-ppp
